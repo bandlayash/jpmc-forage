@@ -36,5 +36,7 @@ public class TransactionListener {
         }
         
         logger.info("========== TRANSACTION PROCESSING COMPLETE ==========");
+
+        
     }
 }
