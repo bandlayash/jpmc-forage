@@ -23,16 +23,10 @@ public class KafkaProducerConfig {
     @Bean
     public ProducerFactory<String, Transaction> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
-        
-        // If using embedded Kafka, this can be omitted or injected dynamically
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-
-        // Optional: make JSON serializer more forgiving
-        configProps.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, false);
-
+        configProps.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, false); // Optional
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 

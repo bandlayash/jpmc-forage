@@ -8,12 +8,19 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class TransactionListener {
-
+    
     private static final Logger logger = LoggerFactory.getLogger(TransactionListener.class);
 
-    @KafkaListener(topics = "${general.kafka-topic}", groupId = "midas-core-group", containerFactory = "transactionKafkaListenerContainerFactory")
+    
+    public void init() {
+        logger.info("TransactionListener initialized and ready to receive messages");
+    }
+
+    @KafkaListener(topics = "${kafka.topic.transaction}", groupId = "midas-group")
     public void listen(Transaction transaction) {
-        logger.info("Listener triggered!");
-        logger.info("Received Transaction: {}", transaction.getAmount());
+        logger.info("========== TRANSACTION RECEIVED ==========");
+        logger.info("Received transaction: {}", transaction);
+        logger.info("Amount: {}", transaction.getAmount());
+        System.out.println("DEBUG: Received transaction: " + transaction);
     }
 }
