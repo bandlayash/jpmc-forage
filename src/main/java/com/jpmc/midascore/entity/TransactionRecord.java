@@ -24,16 +24,21 @@ public class TransactionRecord {
     
     @Column(nullable = false)
     private LocalDateTime timestamp;
+
+    @Column(nullable = false)
+    private float incentive;
+
     
     // Default constructor (required by JPA)
     public TransactionRecord() {
     }
     
     // Constructor for creating new transaction records
-    public TransactionRecord(UserRecord sender, UserRecord recipient, float amount) {
+    public TransactionRecord(UserRecord sender, UserRecord recipient, float amount, float incentive) {
         this.sender = sender;
         this.recipient = recipient;
         this.amount = amount;
+        this.incentive = incentive;
         this.timestamp = LocalDateTime.now();
     }
     
@@ -78,6 +83,14 @@ public class TransactionRecord {
         this.timestamp = timestamp;
     }
     
+    public float getIncentive() {
+        return incentive;
+    }
+
+    public void setIncentive(float incentive) {
+        this.incentive = incentive;
+    }
+
     @Override
     public String toString() {
         return "TransactionRecord{" +

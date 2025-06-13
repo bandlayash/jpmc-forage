@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import com.jpmc.midascore.entity.TransactionRecord;
 import com.jpmc.midascore.entity.UserRecord;
@@ -19,6 +20,24 @@ public class TransactionProcessingService {
     
     @Autowired
     private TransactionRecordRepository transactionRecordRepository;
+    
+    @Autowired
+    private RestTemplate restTemplate;
+    
+    // Inner class to handle incentive API response
+    public static class Incentive {
+        private float amount;
+        
+        public Incentive() {}
+        
+        public float getAmount() {
+            return amount;
+        }
+        
+        public void setAmount(float amount) {
+            this.amount = amount;
+        }
+    }
     
     @Transactional
     public void processTransaction(Transaction transaction) {
@@ -38,29 +57,48 @@ public class TransactionProcessingService {
             return;
         }
         
-        // 4. Update balances
-        sender.setBalance(sender.getBalance() - transactionAmount);
-        recipient.setBalance(recipient.getBalance() + transactionAmount);
+        // 4. Call incentive API to get incentive amount
+        float incentiveAmount = 0;
+        try {
+            Incentive incentive = restTemplate.postForObject(
+                "http://localhost:8080/incentive", 
+                transaction, 
+                Incentive.class
+            );
+            if (incentive != null) {
+                incentiveAmount = incentive.getAmount();
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to get incentive: " + e.getMessage());
+            // Continue processing without incentive
+        }
         
-        // 5. Save users
+        // 5. Update balances
+        sender.setBalance(sender.getBalance() - transactionAmount);
+        recipient.setBalance(recipient.getBalance() + transactionAmount + incentiveAmount);
+        
+        // 6. Save users
         userRepository.save(sender);
         userRepository.save(recipient);
         
-        // 6. Record transaction
+        // 7. Record transaction with incentive
         TransactionRecord record = new TransactionRecord();
         record.setSender(sender);
         record.setRecipient(recipient);
         record.setAmount(transaction.getAmount());
+        record.setIncentive(incentiveAmount); // You'll need to add this field to TransactionRecord
         record.setTimestamp(LocalDateTime.now());
         
         transactionRecordRepository.save(record);
-
-        // Add this at the end of processTransaction method
-        // Debug: Check Waldorf's balance after transaction
-        if ("waldorf".equals(sender.getName())) {
-            System.out.println("WALDORF BALANCE UPDATE: " + sender.getBalance());
-        } else if ("waldorf".equals(recipient.getName())) {
-            System.out.println("WALDORF BALANCE UPDATE: " + recipient.getBalance());
+        
+    
+            
+        
+        
+        // Debug: Check Waldorf's balance after any transaction involving Wilbur
+        if ("wilbur".equals(sender.getName()) || "wilbur".equals(recipient.getName())) {
+            UserRecord wilbur = "wilbur".equals(sender.getName()) ? sender : recipient;
+            System.out.println("WILBUR BALANCE UPDATE: " + wilbur.getBalance());
         }
     }
 }
